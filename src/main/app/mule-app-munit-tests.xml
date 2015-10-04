@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:slack="http://www.mulesoft.org/schema/mule/slack" xmlns:objectstore="http://www.mulesoft.org/schema/mule/objectstore" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd
+http://www.mulesoft.org/schema/mule/objectstore http://www.mulesoft.org/schema/mule/objectstore/current/mule-objectstore.xsd
+http://www.mulesoft.org/schema/mule/slack http://www.mulesoft.org/schema/mule/slack/current/mule-slack.xsd">
+    <http:listener-config name="HTTP_Listener_Configuration" host="0.0.0.0" port="8081" doc:name="HTTP Listener Configuration"/>
+    <objectstore:config name="ObjectStore__Configuration" doc:name="ObjectStore: Configuration"/>
+    <slack:config-type name="Slack__Token_Configuration" accessToken="${slack.token}" doc:name="Slack: Token Configuration"/>
+    <flow name="mule-app-munit-testsFlow">
+        <http:listener config-ref="HTTP_Listener_Configuration" path="/1" doc:name="/1"/>
+        <choice doc:name="Choice">
+            <when expression="#[payload.equals(true)]">
+                <logger message="#['The value is: ' + payload]" level="INFO" doc:name="Logger"/>
+                <set-payload value="True value" doc:name="True value"/>
+            </when>
+            <otherwise>
+                <logger message="#['The value is: ' + payload]" level="INFO" doc:name="Logger"/>
+                <set-payload value="False value" doc:name="False value"/>
+            </otherwise>
+        </choice>
+    </flow>
+    <flow name="simulate-password-checking-with-object-store">
+        <http:listener config-ref="HTTP_Listener_Configuration" path="/2" doc:name="/2"/>
+        <objectstore:retrieve config-ref="ObjectStore__Configuration" key="#[flowVars.userId]" doc:name="RetrievePassword"/>
+        <set-variable variableName="encodedPassword" value="#[new String(java.util.Base64.getEncoder().encode(flowVars.password.getBytes()))]" doc:name="Encode password"/>
+        <choice doc:name="Validate Password">
+            <when expression="#[payload.equals(flowVars.encodedPassword)]">
+                <set-property propertyName="http.status" value="200" doc:name="Authorized"/>
+            </when>
+            <otherwise>
+                <set-property propertyName="http.status" value="401" doc:name="Set Unauthorized Status"/>
+            </otherwise>
+        </choice>
+    </flow>
+    <flow name="send-slack-message">
+        <http:listener config-ref="HTTP_Listener_Configuration" path="/3" doc:name="HTTP"/>
+        <slack:post-message config-ref="Slack__Token_Configuration" channelId="${slack.channel}" message="#[payload]" doc:name="Slack" asUser="true"/>
+    </flow>
+</mule>

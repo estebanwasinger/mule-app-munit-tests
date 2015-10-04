@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:munit="http://www.mulesoft.org/schema/mule/munit" xmlns:spring="http://www.springframework.org/schema/beans" xmlns:core="http://www.mulesoft.org/schema/mule/core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
+    <munit:config name="munit" doc:name="MUnit configuration"/>
+    <spring:beans>
+        <spring:import resource="classpath:mule-app-munit-tests.xml"/>
+    </spring:beans>
+    <munit:test name="mule-app-munit-tests-test-suite-mule-app-munit-testsFlowTest-true-value" description="Test">
+        <set-payload value="#[java.lang.Boolean.TRUE]" doc:name="Set true value payload"/>
+        <flow-ref name="mule-app-munit-testsFlow" doc:name="Flow-ref to mule-app-munit-testsFlow"/>
+        <munit:assert-on-equals expectedValue="#['True value']" actualValue="#[payload]" doc:name="Assert Payload Equals = 'True value'"/>
+    </munit:test>
+        <munit:test name="mule-app-munit-tests-test-suite-mule-app-munit-testsFlowTest-false-value" description="Test">
+        <set-payload value="#[java.lang.Boolean.FALSE]" doc:name="Set false value payload"/>
+        <flow-ref name="mule-app-munit-testsFlow" doc:name="Flow-ref to mule-app-munit-testsFlow"/>
+        <munit:assert-on-equals expectedValue="#['False value']" actualValue="#[payload]" doc:name="Assert Payload Equals = 'False value'"/>
+    </munit:test>
+</mule>
